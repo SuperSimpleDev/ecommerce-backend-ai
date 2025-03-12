@@ -460,5 +460,15 @@ export const defaultProducts = [
     },
     "priceCents": 1899,
     "keywords": ["kitchen", "kitchen towels", "tissues"]
+  },
+  {
+    name: 'Black Tennis Shoes',
+    image: 'images/products/black-tennis-shoes.jpg',
+    rating: {
+      stars: 5,
+      count: 100
+    },
+    priceCents: 1999,
+    keywords: ['shoes', 'apparel', 'sports']
   }
 ];
