@@ -1,6 +1,6 @@
 import express from 'express';
 import { Product } from '../models/Product.js';
-import { Op } from 'sequelize';
+import fuzzysort from 'fuzzysort';
 
 const router = express.Router();
 
@@ -9,27 +9,30 @@ router.get('/', async (req, res) => {
 
   let products;
   if (search) {
-    products = await Product.findAll({
-      where: {
-        [Op.or]: [
-          {
-            name: {
-              [Op.like]: `%${search}%`
-            }
-          },
-          {
-            // Note: in my code, keywords is actually
-            // save as a string (combine with commas)
-            // in the database. So `%${search}%` still
-            // works because it searches inside the
-            // combined string.
-            keywords: {
-              [Op.like]: `%${search}%`
-            }
-          }
-        ]
-      }
+    products = await Product.findAll();
+
+    // Create a new array of products with
+    // the keywords joined so it can be
+    // fuzzy searched.
+    const searchProducts = products.map(product => ({
+      id: product.id,
+      name: product.name,
+      keywords: product.keywords.join(', ')
+    }));
+
+    const results = fuzzysort.go(search, searchProducts, {
+      keys: ['name', 'keywords'],
+      threshold: -500,
+      all: true
     });
+
+    const matchedProducts = results.map(result => {
+      return products.find(product => {
+        return product.id === result.obj.id;
+      });
+    });
+
+    products = matchedProducts;
 
   } else {
     products = await Product.findAll();
