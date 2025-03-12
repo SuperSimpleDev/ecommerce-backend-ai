@@ -11,9 +11,23 @@ router.get('/', async (req, res) => {
   if (search) {
     products = await Product.findAll({
       where: {
-        name: {
-          [Op.like]: `%${search}%`
-        }
+        [Op.or]: [
+          {
+            name: {
+              [Op.like]: `%${search}%`
+            }
+          },
+          {
+            // Note: in my code, keywords is actually
+            // save as a string (combine with commas)
+            // in the database. So `%${search}%` still
+            // works because it searches inside the
+            // combined string.
+            keywords: {
+              [Op.like]: `%${search}%`
+            }
+          }
+        ]
       }
     });
 
