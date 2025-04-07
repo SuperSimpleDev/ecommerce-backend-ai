@@ -8,7 +8,7 @@ const router = express.Router();
 
 router.get('/', async (req, res) => {
   const expand = req.query.expand;
-  let orders = await Order.findAll();
+  let orders = await Order.findAll({ order: [['orderTimeMs', 'DESC']] }); // Sort by most recent
 
   if (expand === 'products') {
     orders = await Promise.all(orders.map(async (order) => {
@@ -30,14 +30,14 @@ router.get('/', async (req, res) => {
 });
 
 router.post('/', async (req, res) => {
-  const { cart } = req.body;
+  const cartItems = await CartItem.findAll();
 
-  if (!Array.isArray(cart) || cart.length === 0) {
-    return res.status(400).json({ error: 'Invalid cart' });
+  if (cartItems.length === 0) {
+    return res.status(400).json({ error: 'Cart is empty' });
   }
 
   let totalCostCents = 0;
-  const products = await Promise.all(cart.map(async (item) => {
+  const products = await Promise.all(cartItems.map(async (item) => {
     const product = await Product.findByPk(item.productId);
     if (!product) {
       throw new Error(`Product not found: ${item.productId}`);
